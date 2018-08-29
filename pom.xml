@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.sunbird</groupId>
+    <artifactId>sunbird-config</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>Sunbird Config Main</name>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<spring.version>4.2.4.RELEASE</spring.version>
+		<version.compiler.plugin>2.3.1</version.compiler.plugin>
+		<maven.compiler.target>1.8</maven.compiler.target>
+		<maven.compiler.source>1.8</maven.compiler.source>
+	</properties>
+
+	<profiles>
+		<profile>
+			<id>config-services</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+			<modules>
+				<!--<module>searchIndex-platform</module>-->
+				<module>config-core</module>
+				<module>config-modules</module>
+				<!--<module>language-platform</module>-->
+				<!--<module>orchestrator</module>-->
+				<module>config-base</module>
+				<!--<module>platform-tools/kernel-extension</module>-->
+			</modules>
+		</profile>
+		<!--<profile>-->
+			<!--<id>samza-jobs</id>-->
+			<!--<modules>-->
+				<!--<module>config-core</module>-->
+				<!--<module>config-modules/actors</module>-->
+				<!--<module>config-modules/content-manager</module>-->
+				<!--&lt;!&ndash;<module>platform-jobs</module>&ndash;&gt;-->
+			<!--</modules>-->
+		<!--</profile>-->
+	</profiles>
+
+	<dependencies>
+
+	</dependencies>
+
+	<build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<artifactId>maven-assembly-plugin</artifactId>
+					<version>2.3</version>
+					<configuration>
+						<descriptors>
+							<descriptor>src/assembly/bin.xml</descriptor>
+						</descriptors>
+					</configuration>
+				</plugin>
+
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<version>2.3.2</version>
+					<configuration>
+						<source>1.8</source>
+						<target>1.8</target>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
+
+</project>

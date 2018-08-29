@@ -1,0 +1,455 @@
+{
+  "themess": {
+    "manifest": {
+    },
+    "template": [
+      {
+        "text": [
+          {
+            "align": "center",
+            "color": "black",
+            "font": "Verdana",
+            "fontsize": 70,
+            "model": "item.title",
+            "w": 80,
+            "x": 10,
+            "y": 6
+          },
+          {
+            "align": "center",
+            "color": "black",
+            "font": "Verdana",
+            "fontsize": 100,
+            "h": 15,
+            "id": "newText",
+            "model": "item.ans1",
+            "stroke": "black",
+            "valign": "middle",
+            "w": 35,
+            "x": 58,
+            "y": 67,
+            "z-index": 100
+          },
+          {
+            "color": "black",
+            "font": "Verdana",
+            "fontsize": 100,
+            "h": 8,
+            "model": "item.question",
+            "w": 20,
+            "x": 10,
+            "y": 90
+          }
+        ],
+        "shape": [
+          {
+            "event": {
+              "action": {
+                "asset": "bKeyboard",
+                "command": "custom",
+                "id": "newText",
+                "invoke": "switchTarget",
+                "type": "command"
+              },
+              "type": "click"
+            },
+            "fill": "white",
+            "h": 15,
+            "stroke-width": 5,
+            "w": 35,
+            "x": 58,
+            "y": 67,
+            "z-index": 99
+          },
+          {
+            "event": {
+              "action": {
+                "asset_model": "item.title_audio.asset",
+                "command": "play",
+                "type": "command"
+              },
+              "type": "click"
+            },
+            "fill": "white",
+            "h": 15,
+            "w": 80,
+            "x": 10,
+            "y": 6,
+            "z-index": 99
+          }
+        ],
+        "keyboard": {
+          "id": "bKeyboard",
+          "keys": "item.keys",
+          "limit": 10,
+          "target": "newText",
+          "type": "custom",
+          "x": 5,
+          "y": 15
+        },
+        "image": {
+          "event": {
+            "action": {
+              "asset_model": "item.question_audio",
+              "command": "play",
+              "type": "command"
+            },
+            "type": "click"
+          },
+          "h": 30,
+          "model": "item.question_image",
+          "w": 20,
+          "x": 10,
+          "y": 58
+        },
+        "id": "org.sunbird.ftb.barakhadi"
+      },
+      {
+        "text": [
+          {
+            "font": "Georgia",
+            "fontsize": 40,
+            "model": "item.title",
+            "marginY": 10,
+            "padX": 30,
+            "padY": 10,
+            "w": 70,
+            "h": 12,
+            "x": 15,
+            "y": 5,
+            "lineHeight": 1.2,
+            "align": "left"
+          },
+          {
+            "font": "Georgia",
+            "fontsize": 60,
+            "model": "item.question",
+            "marginY": 10,
+            "padX": 30,
+            "padY": 10,
+            "w": 70,
+            "h": 12,
+            "x": 15,
+            "y": 12,
+            "lineHeight": 1.2
+          }
+        ],
+        "mcq": {
+          "options": {
+            "cols": 1,
+            "h": 60,
+            "layout": "table",
+            "marginX": 5,
+            "marginY": 8,
+            "options": "options",
+            "padX": 30,
+            "padY": 10,
+            "w": 40,
+            "x": 30,
+            "y": 35,
+            "align": "left"
+          },
+          "model": "item",
+          "multi_select": false,
+          "shadow": "#FF0000"
+        },
+        "id": "mcq_template_default"
+      },
+      {
+        "text": [
+          {
+            "x": 25,
+            "y": 25,
+            "w": 50,
+            "h": 9,
+            "visible": true,
+            "editable": true,
+            "model": "word.lemma",
+            "weight": "normal",
+            "font": "helvetica",
+            "color": "rgb(0,0,0)",
+            "fontstyle": "",
+            "fontsize": 75,
+            "align": "left",
+            "z-index": 1
+          },
+          {
+            "x": 25,
+            "y": 35,
+            "w": 50,
+            "h": 40,
+            "visible": true,
+            "editable": true,
+            "model": "word.gloss",
+            "weight": "normal",
+            "font": "helvetica",
+            "color": "rgb(0,0,0)",
+            "fontstyle": "",
+            "fontsize": 43,
+            "align": "left",
+            "z-index": 2
+          }
+        ],
+        "shape": [
+          {
+            "x": 20,
+            "y": 20,
+            "w": 60,
+            "h": 60,
+            "visible": true,
+            "editable": true,
+            "type": "roundrect",
+            "radius": 10,
+            "opacity": 1,
+            "fill": "#45b3a5",
+            "stroke-width": 1,
+            "z-index": 0
+          }
+        ],
+        "id": "infoTemplate"
+      },
+      {
+        "text": {
+          "model": "item.title",
+          "x": 9,
+          "y": 7,
+          "w": 86,
+          "h": 4,
+          "font": "Georgia",
+          "fontsize": 42
+        },
+        "mcq": {
+          "options": {
+            "layout": "table",
+            "x": 20,
+            "y": 15,
+            "w": 70,
+            "h": 85,
+            "cols": 2,
+            "marginX": 10,
+            "marginY": 5,
+            "options": "options"
+          },
+          "multi_select": false,
+          "model": "item"
+        },
+        "g": {
+          "image": {
+            "event": {
+              "action": [
+                {
+                  "type": "command",
+                  "command": "stop",
+                  "asset_model": "item.hints[0].asset"
+                },
+                {
+                  "type": "command",
+                  "command": "toggleShow",
+                  "asset": "hint"
+                }
+              ],
+              "type": "click"
+            },
+            "asset": "speech_bubble",
+            "x": 0,
+            "y": 0,
+            "w": 100,
+            "h": 100
+          },
+          "text": [
+            {
+              "x": 10,
+              "y": 20,
+              "w": 80,
+              "h": 80,
+              "font": "Georgia",
+              "weight": "bold",
+              "fontsize": 150,
+              "__text": "Hint"
+            },
+            {
+              "x": 10,
+              "y": 40,
+              "w": 80,
+              "h": 80,
+              "font": "Georgia",
+              "fontsize": 120,
+              "model": "item.hints[1].asset"
+            }
+          ],
+          "x": 9,
+          "y": 17,
+          "w": 20,
+          "h": 20,
+          "id": "hint",
+          "visible": false
+        },
+        "image": {
+          "event": {
+            "action": [
+              {
+                "type": "command",
+                "command": "togglePlay",
+                "asset_model": "item.hints[0].asset"
+              },
+              {
+                "type": "command",
+                "command": "toggleShow",
+                "asset": "hint"
+              }
+            ],
+            "type": "click"
+          },
+          "asset": "icon_hint",
+          "x": 5,
+          "y": 35
+        },
+        "id": "mcq_template_1"
+      },
+      {
+        "shape": {
+          "event": {
+            "type": "click"
+          },
+          "type": "rect",
+          "x": -400,
+          "y": -400,
+          "w": 800,
+          "h": 800,
+          "fill": "black",
+          "opacity": 0.4
+        },
+        "text": {
+          "x": 0,
+          "y": 10,
+          "w": 100,
+          "h": 50,
+          "valign": "middle",
+          "font": "Verdana",
+          "fontsize": 150,
+          "align": "center",
+          "z-index": 100,
+          "__text": "फिर प्रयास करें !!!"
+        },
+        "image": [
+          {
+            "event": {
+              "action": {
+                "type": "command",
+                "command": "hide",
+                "asset": "retryDialog"
+              },
+              "type": "click"
+            },
+            "asset": "yellowbox",
+            "x": 0,
+            "y": 0,
+            "w": 100,
+            "h": 100,
+            "visible": true,
+            "id": "right"
+          },
+          {
+            "event": {
+              "action": {
+                "type": "command",
+                "command": "hide",
+                "asset": "retryDialog"
+              },
+              "type": "click"
+            },
+            "id": "reload_item",
+            "asset": "reload",
+            "x": 35,
+            "y": 55,
+            "w": 13,
+            "h": 30
+          },
+          {
+            "event": {
+              "action": {
+                "type": "command",
+                "command": "transitionTo",
+                "asset": "theme",
+                "param": "next",
+                "effect": "fadein",
+                "direction": "left",
+                "ease": "linear",
+                "duration": 200
+              },
+              "type": "click"
+            },
+            "id": "next_item",
+            "asset": "next",
+            "x": 55,
+            "y": 55,
+            "w": 13,
+            "h": 30
+          }
+        ],
+        "id": "retry"
+      },
+      {
+        "shape": {
+          "event": {
+            "type": "click"
+          },
+          "type": "rect",
+          "x": -400,
+          "y": -400,
+          "w": 800,
+          "h": 800,
+          "fill": "black",
+          "opacity": 0.4
+        },
+        "text": {
+          "x": 0,
+          "y": 10,
+          "w": 100,
+          "h": 50,
+          "valign": "middle",
+          "font": "Verdana",
+          "fontsize": 150,
+          "align": "center",
+          "z-index": 100,
+          "__text": "सही जवाब !!!"
+        },
+        "image": [
+          {
+            "event": {
+              "action": {
+                "type": "command",
+                "command": "transitionTo",
+                "asset": "theme",
+                "param": "next",
+                "effect": "fadein",
+                "direction": "left",
+                "ease": "linear",
+                "duration": 200
+              },
+              "type": "click"
+            },
+            "asset": "greenbox",
+            "x": 0,
+            "y": 0,
+            "w": 100,
+            "h": 100,
+            "visible": true,
+            "id": "right"
+          },
+          {
+            "id": "next_item",
+            "asset": "next",
+            "x": 45,
+            "y": 55,
+            "w": 13,
+            "h": 30
+          }
+        ],
+        "id": "goodjob"
+      }
+    ],
+    "startStage": "scene1",
+    "id": "theme",
+    "ver": 0.3
+}
