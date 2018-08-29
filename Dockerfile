@@ -5,4 +5,3 @@ RUN apt update \
     && mkdir -p /home/sunbird/config
 WORKDIR /home/sunbird/config
 ADD config-base/service/target/config-service.war /usr/local/tomcat/webapps/
-EXPOSE 6000:8080
