@@ -1,4 +1,4 @@
-FROM tomcat:8-jre8
+FROM tomcat:8
 MAINTAINER "S M Y" "smy.altamash@gmail.com"
 RUN apt update \
     && useradd -ms /bin/bash sunbird \
