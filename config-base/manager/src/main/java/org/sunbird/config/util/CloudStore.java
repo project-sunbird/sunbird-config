@@ -19,7 +19,7 @@ import scala.Option;
 public class CloudStore {
 
     private static BaseStorageService storageService = null;
-    private static String cloudStoreType = "alpha";//Platform.config.getString("cloud_storage_type");
+    private static String cloudStoreType = Platform.config.getString("cloud_storage_type");
 
     static {
 
