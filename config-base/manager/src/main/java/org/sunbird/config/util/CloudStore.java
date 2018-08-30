@@ -19,11 +19,11 @@ import scala.Option;
 public class CloudStore {
 
     private static BaseStorageService storageService = null;
-    private static String cloudStoreType = Platform.config.getString("cloud_storage_type");
+    private static String cloudStoreType = "alpha";//Platform.config.getString("cloud_storage_type");
 
     static {
-        TelemetryManager.error("Cloud storage type 1" + Platform.config.getString("cloud_storage_type"));
-        TelemetryManager.error("Azure storage key 1" + Platform.config.getString("azure_storage_key"));
+
+        System.out.println(Platform.config.entrySet());
 
         if(StringUtils.equalsIgnoreCase(cloudStoreType, "azure")) {
             String storageKey = Platform.config.getString("azure_storage_key");
@@ -34,9 +34,9 @@ public class CloudStore {
             String storageSecret = Platform.config.getString("aws_storage_secret");
             storageService = StorageServiceFactory.getStorageService(new StorageConfig(cloudStoreType, storageKey, storageSecret));
         }else {
-            TelemetryManager.error("Cloud storage type 2" + Platform.config.getString("cloud_storage_type"));
-            TelemetryManager.error("Azure storage key 2" + Platform.config.getString("azure_storage_key"));
-            throw new ServerException("ERR_INVALID_CLOUD_STORAGE", "Error while initialising cloud storage");
+            TelemetryManager.error("Cloud storage type 2: " + Platform.config.getString("cloud_storage_type"));
+            TelemetryManager.error("Azure storage key 2: " + Platform.config.getString("azure_storage_key"));
+            throw new ServerException("ERR_INVALID_CLOUD_STORAGE", "Error while initialising cloud storage, cst: " + Platform.config.getString("cloud_storage_type") + "***");
         }
     }
 
