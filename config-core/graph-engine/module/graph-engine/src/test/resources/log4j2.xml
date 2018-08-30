@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+	<Appenders>
+		<Console name="Console" target="SYSTEM_OUT">
+			<PatternLayout pattern="%d [%t] %-5level %logger{36} - %msg%n" />
+		</Console>
+		<RollingRandomAccessFile name="GraphEventAppender"
+			fileName="/data/logs/graphengine_event_mw.log" filePattern="/data/logs/graphengine_event_mw-%d{MM-dd-yyyy-hh}-%i.log">
+			<PatternLayout>
+				<Pattern>%d %msg%n</Pattern>
+			</PatternLayout>
+			<Policies>
+				<SizeBasedTriggeringPolicy size="250 MB" />
+				<TimeBasedTriggeringPolicy interval="24" modulate="true" />
+				<OnStartupTriggeringPolicy />
+			</Policies>
+			<DefaultRolloverStrategy>
+                <Delete basePath="/data/logs/" maxDepth="1" testMode="false">
+                    <IfFileName glob="graphengine_event_mw-*.log" />
+                    <IfLastModified age="7d" />
+                </Delete>
+            </DefaultRolloverStrategy>
+		</RollingRandomAccessFile>
+		<RollingFile name="PerfLogAppender" fileName="/data/logs/graphengine-perf_mw.log"
+			filePattern="/data/logs/graphengine-perf_mw-%d{MM-dd-yyyy-hh}-%i.log">
+			<PatternLayout>
+				<Pattern>%d [%t] - %msg%n</Pattern>
+			</PatternLayout>
+			<Policies>
+				<SizeBasedTriggeringPolicy size="250 MB" />
+				<TimeBasedTriggeringPolicy interval="24" modulate="true" />
+				<OnStartupTriggeringPolicy />
+			</Policies>
+			<DefaultRolloverStrategy>
+                <Delete basePath="/data/logs/" maxDepth="1" testMode="false">
+                    <IfFileName glob="graphengine-perf_mw-*.log" />
+                    <IfLastModified age="7d" />
+                </Delete>
+            </DefaultRolloverStrategy>
+		</RollingFile>
+	</Appenders>
+	<Loggers>
+		<Logger name="PerformanceTestLogger" level="INFO" additivity="false">
+			<AppenderRef ref="PerfLogAppender" />
+		</Logger>
+		<Root level="INFO">
+			<AppenderRef ref="GraphEventAppender" />
+		</Root>
+	</Loggers>
+</Configuration>
