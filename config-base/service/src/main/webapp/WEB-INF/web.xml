@@ -31,6 +31,10 @@
 		<listener-class>org.springframework.web.util.Log4jConfigListener</listener-class>
 	</listener>
 
+	<listener>
+		<listener-class>org.sunbird.config.packageListener.RefreshServletContextListener</listener-class>
+	</listener>
+
 	<servlet>
 		<servlet-name>config-service</servlet-name>
 		<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
