@@ -1,7 +1,7 @@
 package org.sunbird.cassandra.connector.util;
 
-import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.Session;
+import com.datastax.driver.core.*;
+import com.datastax.driver.core.policies.DefaultRetryPolicy;
 import org.apache.commons.lang3.StringUtils;
 import org.sunbird.common.Platform;
 import org.sunbird.telemetry.logger.TelemetryManager;
@@ -35,16 +35,24 @@ public class CassandraConnector {
             String username = Platform.config.getString("sunbird_cassandra_username");
             String password = Platform.config.getString("sunbird_cassandra_password");
 
-            Cluster.Builder builder = Cluster.builder().addContactPoint(host).withPort(port);
+            Cluster.Builder builder = Cluster.builder()
+                                        .addContactPoint(host)
+                                        .withPort(port)
+                                        .withProtocolVersion(ProtocolVersion.V3)
+                                        .withRetryPolicy(DefaultRetryPolicy.INSTANCE)
+                                        .withTimestampGenerator(new AtomicMonotonicTimestampGenerator());
+            
             if (StringUtils.isNotBlank(username) && StringUtils.isNotBlank(password)) {
                 builder.withCredentials(username, password);
             }
+
             cluster = builder.build();
 
             session = cluster.connect();
             registerShutdownHook();
         } catch (Exception e) {
             TelemetryManager.error("Error! While Loading Cassandra Properties." + e.getMessage(), e);
+
         }
     }
 
