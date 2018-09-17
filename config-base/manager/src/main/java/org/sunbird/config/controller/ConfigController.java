@@ -9,10 +9,11 @@ import org.sunbird.common.controller.BaseController;
 import org.sunbird.common.dto.Response;
 import org.sunbird.common.dto.ResponseParams;
 import org.sunbird.common.dto.ResponseParams.StatusType;
-import org.sunbird.common.exception.ResponseCode;
 import org.sunbird.config.util.ConfigStore;
 import org.sunbird.telemetry.logger.TelemetryManager;
 
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 @Controller
@@ -59,34 +60,38 @@ public class ConfigController extends BaseController {
         }
     }
 
-    @RequestMapping(value = "/read/{configKey:.+}", method = RequestMethod.GET)
+
+    @RequestMapping(value = "/read", method = RequestMethod.POST)
     @ResponseBody
-    public ResponseEntity<Response> getConfiguration(@PathVariable(value = "configKey") String configKey) {
+    public ResponseEntity<Response> getConfigurations(@RequestBody(required = true) Map<String, Object> map) {
         String apiId = "sunbird.config.read";
 
         try {
-            TelemetryManager.log("ConfigService | GET | configKey: " + configKey);
+            JSONObject request = new JSONObject(map);
+            Iterator configKeys = request.getJSONObject("request").getJSONArray("keys").iterator();
+
+            TelemetryManager.log("ConfigService | GET | configKeys: " + configKeys.toString());
+
+            Map<String, Object> result = new HashMap<>();
+            while(configKeys.hasNext()) {
+                String configKey = (String)configKeys.next();
+
+                if (ConfigStore.isConfigKeyExists(configKey)) {
+                    Object data = ConfigStore.read(configKey);
+                    result.put(configKey, data);
+                }
+            }
 
             Response response = new Response();
             ResponseParams params = new ResponseParams();
+            params.setErr("0");
+            params.setStatus(StatusType.successful.name());
+            params.setErrmsg("Operation successful");
+            response.setParams(params);
+            response.put("keys", result);
 
-            if (ConfigStore.isConfigKeyExists(configKey)) {
-                Object data = ConfigStore.read(configKey);
+            TelemetryManager.log("ConfigService | successResponse: " + response.getResponseCode());
 
-                params.setErr("0");
-                params.setStatus(StatusType.successful.name());
-                params.setErrmsg("Operation successful");
-                response.setParams(params);
-                response.put(configKey, data);
-                TelemetryManager.log("ConfigService | successResponse: " + response.getResponseCode());
-            } else {
-                params.setErr("1");
-                params.setStatus(StatusType.failed.name());
-                params.setErrmsg("Operation failed");
-                response.setParams(params);
-                response.setResponseCode(ResponseCode.RESOURCE_NOT_FOUND);
-                TelemetryManager.log("ConfigService | FailureResponse for configKey: " + configKey, response.getResult());
-            }
             return getResponseEntity(response, apiId, null);
 
         } catch (Exception e) {
