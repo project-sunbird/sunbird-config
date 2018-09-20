@@ -24,7 +24,6 @@ public class ConfigController extends BaseController {
     /**
      * API to refresh the config
      *
-     * @param map
      * @return
      */
     @RequestMapping(value = "/refresh", method = RequestMethod.POST)
@@ -81,6 +80,39 @@ public class ConfigController extends BaseController {
                     result.put(configKey, data);
                 }
             }
+
+            Response response = new Response();
+            ResponseParams params = new ResponseParams();
+            params.setErr("0");
+            params.setStatus(StatusType.successful.name());
+            params.setErrmsg("Operation successful");
+            response.setParams(params);
+            response.put("keys", result);
+
+            TelemetryManager.log("ConfigService | successResponse: " + response.getResponseCode());
+
+            return getResponseEntity(response, apiId, null);
+
+        } catch (Exception e) {
+            TelemetryManager.error("ConfigService | Exception", e);
+            return getExceptionResponseEntity(e, apiId, null);
+        }
+    }
+
+
+    @RequestMapping(value = "/status", method = RequestMethod.GET)
+    @ResponseBody
+    public ResponseEntity<Response> getStatus() {
+        String apiId = "sunbird.config.status";
+
+        try {
+            Map<String, Object> result = new HashMap<>();
+
+            Integer configCount = ConfigStore.getConfigCount();
+            Long lastRefresh = ConfigStore.getLastRefreshTimestamp();
+
+            result.put("size", configCount);
+            result.put("lastUpdated", lastRefresh);
 
             Response response = new Response();
             ResponseParams params = new ResponseParams();

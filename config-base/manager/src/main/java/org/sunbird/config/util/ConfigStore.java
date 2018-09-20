@@ -1,5 +1,6 @@
 package org.sunbird.config.util;
 
+import com.datastax.driver.core.Row;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigValue;
@@ -7,9 +8,7 @@ import org.sunbird.cassandra.store.CassandraStoreImpl;
 import org.sunbird.common.exception.ServerException;
 
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class ConfigStore {
 
@@ -50,6 +49,30 @@ public class ConfigStore {
      */
     public static Boolean isConfigKeyExists(String key) {
         return configStore.containsKey(key);
+    }
+
+    /**
+     * Reads the storage and gets the count of the config keys
+     * @return Integer
+     */
+    public static Integer getConfigCount() {
+        Set<Map.Entry<String, Object>> configKeys = configStore.entrySet();
+        return configKeys.size();
+    }
+
+    /**
+     * Get the timestamp when the configurations were refreshed last
+     * @return Long
+     */
+    public static Long getLastRefreshTimestamp() {
+        Long timestamp = 0L;
+        List<Row> auditRecords = auditStore.read(Constants.CASSANDRA_AUDIT_COLUMN_KEY, Constants.CASSANDRA_CURRENT_ID_VALUE);
+        if (auditRecords.size() > 0) {
+            Iterator iter = auditRecords.iterator();
+            Object auditRecord = iter.next();
+            timestamp = ((Row) auditRecord).getTime("created_date");
+        }
+        return timestamp;
     }
 
     /**
