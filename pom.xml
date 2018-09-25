@@ -24,28 +24,24 @@
 				<activeByDefault>true</activeByDefault>
 			</activation>
 			<modules>
-				<!--<module>searchIndex-platform</module>-->
 				<module>config-core</module>
 				<module>config-modules</module>
-				<!--<module>language-platform</module>-->
-				<!--<module>orchestrator</module>-->
 				<module>config-base</module>
-				<!--<module>platform-tools/kernel-extension</module>-->
 			</modules>
 		</profile>
-		<!--<profile>-->
-			<!--<id>samza-jobs</id>-->
-			<!--<modules>-->
-				<!--<module>config-core</module>-->
-				<!--<module>config-modules/actors</module>-->
-				<!--<module>config-modules/content-manager</module>-->
-				<!--&lt;!&ndash;<module>platform-jobs</module>&ndash;&gt;-->
-			<!--</modules>-->
-		<!--</profile>-->
 	</profiles>
 
 	<dependencies>
-
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-api</artifactId>
+			<version>2.11.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-core</artifactId>
+			<version>2.11.1</version>
+		</dependency>
 	</dependencies>
 
 	<build>
