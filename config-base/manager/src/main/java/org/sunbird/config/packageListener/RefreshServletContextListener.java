@@ -4,7 +4,6 @@ import com.datastax.driver.core.Row;
 import org.apache.commons.lang3.StringUtils;
 import org.sunbird.cassandra.store.CassandraStoreImpl;
 import org.sunbird.common.Platform;
-import org.sunbird.common.exception.ServerException;
 import org.sunbird.config.util.ConfigStore;
 import org.sunbird.config.util.Constants;
 import org.sunbird.telemetry.logger.TelemetryManager;
@@ -12,8 +11,6 @@ import org.sunbird.telemetry.logger.TelemetryManager;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
-import java.util.Iterator;
-import java.util.List;
 
 public class RefreshServletContextListener implements ServletContextListener {
     private static CassandraStoreImpl auditStore = new CassandraStoreImpl();
@@ -39,18 +36,23 @@ public class RefreshServletContextListener implements ServletContextListener {
             ConfigStore.refresh(configPath);
         } else {
             String err = "Config-Service: Could not load the default configuration on service start. No value to read from database.";
-            System.out.println(err);
+            log(err);
             TelemetryManager.error(err);
         }
     }
 
     private String getConfigPath() {
         String configPath = "";
-        List<Row> auditRecords = auditStore.read(Constants.CASSANDRA_AUDIT_COLUMN_KEY, Constants.CASSANDRA_CURRENT_ID_VALUE);
-        if (auditRecords.size() > 0) {
-            Iterator iter = auditRecords.iterator();
-            Object auditRecord = iter.next();
-            configPath = ((Row) auditRecord).getObject("cloud_store_path").toString();
+        String id = "";
+
+        Long lastRefreshTimestamp = ConfigStore.getLastRefreshTimestamp();
+
+        Row lastAuditRecord = auditStore.getLatestRecord(Constants.CASSANDRA_AUDIT_COLUMN_DATE, lastRefreshTimestamp);
+        log("Last refresh record: " + lastAuditRecord.toString());
+        if (!lastAuditRecord.isNull(Constants.CASSANDRA_AUDIT_COLUMN_PATH)) {
+            configPath = lastAuditRecord.getObject(Constants.CASSANDRA_AUDIT_COLUMN_PATH).toString();
+            id = lastAuditRecord.getString(Constants.CASSANDRA_AUDIT_COLUMN_KEY);
+            log("ID of the current record: " + id);
         }
         return configPath;
     }

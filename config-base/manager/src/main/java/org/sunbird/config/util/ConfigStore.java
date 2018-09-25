@@ -1,20 +1,24 @@
 package org.sunbird.config.util;
 
+import com.datastax.driver.core.Row;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigValue;
 import org.sunbird.cassandra.store.CassandraStoreImpl;
+import org.sunbird.common.Platform;
 import org.sunbird.common.exception.ServerException;
 
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 public class ConfigStore {
 
     private static Map<String, Object> configStore = new HashMap<>();
     private static CassandraStoreImpl auditStore = new CassandraStoreImpl();
+    private static String cloudStoreType = Platform.config.getString("cloud_storage_type");
 
     static {
         auditStore.initialise(Constants.CASSANDRA_KEYSPACE, Constants.CASSANDRA_AUDIT_TABLE, null, true);
@@ -53,6 +57,29 @@ public class ConfigStore {
     }
 
     /**
+     * Reads the storage and gets the count of the config keys
+     * @return Integer
+     */
+    public static Integer getConfigCount() {
+        Set<Map.Entry<String, Object>> configKeys = configStore.entrySet();
+        return configKeys.size();
+    }
+
+    /**
+     * Get the timestamp when the configurations were refreshed last
+     * @return Long
+     */
+    public static Long getLastRefreshTimestamp() {
+        Long timestamp = 0L;
+        Row latestRecord = auditStore.getLatestRecordTimestamp(Constants.CASSANDRA_AUDIT_COLUMN_DATE, Constants.CASSANDRA_AUDIT_COLUMN_CS_TYPE, cloudStoreType);
+
+        if (!latestRecord.isNull(Constants.CASSANDRA_AUDIT_COLUMN_DATE)) {
+            timestamp = latestRecord.getTime(Constants.CASSANDRA_AUDIT_COLUMN_DATE);
+        }
+        return timestamp;
+    }
+
+    /**
      * Clears the current config data
      */
     private static void clearConfig() {
@@ -72,12 +99,14 @@ public class ConfigStore {
             if (parsedConfigDataList.size() > 0) {
                 //Save the path as Audit log to be used on service restart
                 Long currentEpoch = Instant.now().toEpochMilli();
+                String id = UUID.randomUUID().toString();
 
                 Map<String, Object> cloudStoreConfig = CloudStore.getConfig();
                 cloudStoreConfig.put(Constants.CASSANDRA_AUDIT_COLUMN_PATH, configPath);
                 cloudStoreConfig.put(Constants.CASSANDRA_AUDIT_COLUMN_DATE, currentEpoch);
-                cloudStoreConfig.put(Constants.CASSANDRA_AUDIT_COLUMN_KEY, Constants.CASSANDRA_CURRENT_ID_VALUE);
-                auditStore.upsertRecord(cloudStoreConfig);
+                cloudStoreConfig.put(Constants.CASSANDRA_AUDIT_COLUMN_VERSION, currentEpoch);
+                cloudStoreConfig.put(Constants.CASSANDRA_AUDIT_COLUMN_KEY, id);
+                auditStore.insert(id, cloudStoreConfig);
 
                 //Clear the previous data
                 clearConfig();

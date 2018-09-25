@@ -3,18 +3,12 @@
  */
 package org.sunbird.cassandra.store;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-
+import com.datastax.driver.core.*;
+import com.datastax.driver.core.querybuilder.Clause;
+import com.datastax.driver.core.querybuilder.Delete;
+import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.datastax.driver.core.querybuilder.Select;
+import com.datastax.driver.core.querybuilder.Select.Where;
 import org.apache.commons.lang3.StringUtils;
 import org.sunbird.cassandra.connector.util.CassandraConnector;
 import org.sunbird.cassandra.connector.util.CassandraConnectorStoreParam;
@@ -26,16 +20,10 @@ import org.sunbird.graph.common.DateUtils;
 import org.sunbird.telemetry.logger.TelemetryManager;
 import org.sunbird.telemetry.util.LogAsyncGraphEvent;
 
-import com.datastax.driver.core.BoundStatement;
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.Row;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.querybuilder.Clause;
-import com.datastax.driver.core.querybuilder.Delete;
-import com.datastax.driver.core.querybuilder.QueryBuilder;
-import com.datastax.driver.core.querybuilder.Select;
-import com.datastax.driver.core.querybuilder.Select.Where;
+import java.util.*;
+import java.util.Map.Entry;
+
+import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 
 /**
  * @author mahesh
@@ -205,6 +193,35 @@ public abstract class CassandraStore {
         } catch (Exception e) {
             throw new ServerException(CassandraConnectorStoreParam.ERR_SERVER_ERROR.name(),
                     "Error while fetching all records", e);
+        }
+    }
+
+    /**
+     * @param timestampColumn
+     * @param partitionColKey
+     * @param partitionColVal
+     * @return Row
+     * TODO refactor the query below to Querybuilder
+     */
+    protected Row getLatestRecordTimestamp(String timestampColumn, String partitionColKey, String partitionColVal) {
+        try {
+            String selectQuery = "SELECT max("+timestampColumn+") as "+timestampColumn+" FROM "+keyspace+"."+table+" WHERE "+partitionColKey+" = '"+partitionColVal+"' ALLOW FILTERING";
+            ResultSet results = CassandraConnector.getSession().execute(selectQuery);
+            return results.one();
+        } catch (Exception e) {
+            throw new ServerException(CassandraConnectorStoreParam.ERR_SERVER_ERROR.name(),
+                    "Error while fetching latest timestamp", e);
+        }
+    }
+
+    protected Row getLatestRecord(String timestampColumn, Long lastRefreshTimestamp) {
+        try {
+            Select selectQuery = QueryBuilder.select().from(keyspace, table).where(eq(timestampColumn, lastRefreshTimestamp)).limit(1);
+            ResultSet results = CassandraConnector.getSession().execute(selectQuery);
+            return results.one();
+        } catch (Exception e) {
+            throw new ServerException(CassandraConnectorStoreParam.ERR_SERVER_ERROR.name(),
+                    "Error while fetching latest record", e);
         }
     }
 

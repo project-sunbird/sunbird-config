@@ -26,10 +26,7 @@
 		<module>config-common</module>
 		<module>cassandra-connector</module>
 		<module>graph-engine</module>
-		<!--<module>config-dac</module>-->
 		<module>config-telemetry</module>
-		<!--<module>kafka-client</module>-->
-		<!--<module>libs/cloud-storage-sdk</module>-->
 	</modules>
 
 	<dependencies>
