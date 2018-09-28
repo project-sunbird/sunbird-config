@@ -73,12 +73,12 @@ public class ConfigController extends BaseController {
 
             Map<String, Object> result = new HashMap<>();
             while(configKeys.hasNext()) {
-                String configKey = (String)configKeys.next();
+                String configKey = (String) configKeys.next();
 
-                if (ConfigStore.isConfigKeyExists(configKey)) {
-                    Object data = ConfigStore.read(configKey);
-                    result.put(configKey, data);
-                }
+//                if (ConfigStore.isConfigKeyExists(configKey)) {
+                Object data = ConfigStore.read(configKey);
+                result.put(configKey, data);
+//                }
             }
 
             Response response = new Response();

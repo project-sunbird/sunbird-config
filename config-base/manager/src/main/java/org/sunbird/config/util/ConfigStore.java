@@ -1,18 +1,18 @@
 package org.sunbird.config.util;
 
+import akka.util.Switch;
 import com.datastax.driver.core.Row;
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
+import com.typesafe.config.ConfigRenderOptions;
 import com.typesafe.config.ConfigValue;
 import org.sunbird.cassandra.store.CassandraStoreImpl;
 import org.sunbird.common.Platform;
 import org.sunbird.common.exception.ServerException;
 
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 public class ConfigStore {
 
@@ -112,11 +112,12 @@ public class ConfigStore {
                 clearConfig();
 
                 // Iterate over flat config and Store
-                for (Map.Entry<String, ConfigValue> entry : parsedConfigData.entrySet()) {
-                    String key = entry.getKey();
-                    Object val = entry.getValue().unwrapped();
-                    setConfig(key, val);
-                }
+//                for (Map.Entry<String, ConfigValue> entry : parsedConfigData.entrySet()) {
+//                    String key = entry.getKey();
+//                    Object val = entry.getValue().unwrapped();
+//                    setConfig(key, val);
+//                }
+                setConfig(Constants.CONFIG_STORAGE_KEY, parsedConfigData);
             }
         } catch (Exception e) {
             throw new ServerException("ERR_REFRESH_CONFIG_DATA", "Error while refreshing config data.");
@@ -124,7 +125,40 @@ public class ConfigStore {
         return true;
     }
 
-    public static Object read(String configKey) {
-        return getConfig(configKey);
+    public static Object read(String configKeyWithScope) {
+        //Split the config key into scope and key
+        String[] configParts = configKeyWithScope.split("\\.");
+        Integer configScopeLength = configParts.length - 1;
+
+        if ((!Objects.equals(configParts[0], (Constants.CONFIG_ROOT_KEY).substring(1))) || (configScopeLength > 3)) {
+            //TODO return error
+        }
+
+        Config configurations = (Config) getConfig(Constants.CONFIG_STORAGE_KEY);
+        String configKey = (configParts[configParts.length - 1]).replace("/", ".");
+        Object responseConfig = null;
+
+        switch (configScopeLength) {
+            case 0:
+                responseConfig = configurations.getAnyRef(Constants.CONFIG_ROOT_KEY);
+                break;
+            case 1:
+                responseConfig = configurations.getAnyRef(Constants.CONFIG_ROOT_KEY + "." + configKey);
+                break;
+            case 2:
+                String tenantConfig = configurations.getAnyRef(Constants.CONFIG_ROOT_KEY + "." + Constants.CONFIG_TENANT_IDENTIFIER + "." + configParts[1]).toString();
+                Config tenantInstanceConfig = configurations.getConfig(Constants.CONFIG_ROOT_KEY);
+                Config tenantFallbackConfig = ConfigFactory.parseString(tenantConfig).withFallback(tenantInstanceConfig);
+                responseConfig = tenantFallbackConfig.getAnyRef(configKey);
+                break;
+            case 3:
+                String orgConfig = configurations.getAnyRef(Constants.CONFIG_ROOT_KEY + "." + Constants.CONFIG_TENANT_IDENTIFIER + "." + configParts[1] + "." + Constants.CONFIG_ORGANISATION_IDENTIFIER + "." + configParts[2]).toString();
+                Config orgInstanceConfig = configurations.getConfig(Constants.CONFIG_ROOT_KEY);
+                Config orgFallbackConfig = ConfigFactory.parseString(orgConfig).withFallback(orgInstanceConfig);
+                responseConfig = orgFallbackConfig.getAnyRef(configKey);
+                break;
+        }
+
+        return responseConfig;
     }
 }
