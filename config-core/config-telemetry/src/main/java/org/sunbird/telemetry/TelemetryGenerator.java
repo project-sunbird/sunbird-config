@@ -27,7 +27,7 @@ public class TelemetryGenerator {
 
 	private static ObjectMapper mapper = new ObjectMapper();
 	private static String environment = Platform.config.getString("telemetry_env");
-	private static Producer producer = new Producer(environment + ".ekstep.learning.platform", "1.0");
+	private static Producer producer = new Producer(environment + ".sunbird.learning.platform", "1.0");
 
 	public static void setComponent(String component) {
 		producer.setPid(component);
