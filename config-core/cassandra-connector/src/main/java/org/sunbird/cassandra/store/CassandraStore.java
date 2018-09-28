@@ -205,7 +205,8 @@ public abstract class CassandraStore {
      */
     protected Row getLatestRecordTimestamp(String timestampColumn, String partitionColKey, String partitionColVal) {
         try {
-            String selectQuery = "SELECT max("+timestampColumn+") as "+timestampColumn+" FROM "+keyspace+"."+table+" WHERE "+partitionColKey+" = '"+partitionColVal+"' ALLOW FILTERING";
+//            String selectQuery = "SELECT max("+timestampColumn+") as "+timestampColumn+" FROM "+keyspace+"."+table+" WHERE "+partitionColKey+" = '"+partitionColVal+"' ALLOW FILTERING";
+            String selectQuery = "SELECT max("+timestampColumn+") as "+timestampColumn+" FROM "+keyspace+"."+table;
             ResultSet results = CassandraConnector.getSession().execute(selectQuery);
             return results.one();
         } catch (Exception e) {
