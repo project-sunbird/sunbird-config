@@ -48,8 +48,8 @@ public class RefreshServletContextListener implements ServletContextListener {
         Long lastRefreshTimestamp = ConfigStore.getLastRefreshTimestamp();
 
         Row lastAuditRecord = auditStore.getLatestRecord(Constants.CASSANDRA_AUDIT_COLUMN_DATE, lastRefreshTimestamp);
-        log("Last refresh record: " + lastAuditRecord.toString());
-        if (!lastAuditRecord.isNull(Constants.CASSANDRA_AUDIT_COLUMN_PATH)) {
+        if ((lastAuditRecord != null) && (!lastAuditRecord.isNull(Constants.CASSANDRA_AUDIT_COLUMN_PATH))) {
+            log("Last refresh record: " + lastAuditRecord.toString());
             configPath = lastAuditRecord.getObject(Constants.CASSANDRA_AUDIT_COLUMN_PATH).toString();
             id = lastAuditRecord.getString(Constants.CASSANDRA_AUDIT_COLUMN_KEY);
             log("ID of the current record: " + id);
