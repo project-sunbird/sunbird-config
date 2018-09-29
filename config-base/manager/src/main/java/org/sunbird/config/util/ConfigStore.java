@@ -3,10 +3,7 @@ package org.sunbird.config.util;
 import akka.util.Switch;
 import com.datastax.driver.core.Row;
 import com.sun.org.apache.xpath.internal.operations.Bool;
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
-import com.typesafe.config.ConfigRenderOptions;
-import com.typesafe.config.ConfigValue;
+import com.typesafe.config.*;
 import org.sunbird.cassandra.store.CassandraStoreImpl;
 import org.sunbird.common.Platform;
 import org.sunbird.common.exception.ServerException;
@@ -61,8 +58,8 @@ public class ConfigStore {
      * @return Integer
      */
     public static Integer getConfigCount() {
-        Set<Map.Entry<String, Object>> configKeys = configStore.entrySet();
-        return configKeys.size();
+        Config configurations = (Config) getConfig(Constants.CONFIG_STORAGE_KEY);
+        return configurations.getConfig(Constants.CONFIG_ROOT_KEY).entrySet().size();
     }
 
     /**
@@ -73,10 +70,37 @@ public class ConfigStore {
         Long timestamp = 0L;
         Row latestRecord = auditStore.getLatestRecordTimestamp(Constants.CASSANDRA_AUDIT_COLUMN_DATE, Constants.CASSANDRA_AUDIT_COLUMN_CS_TYPE, cloudStoreType);
 
-        if (!latestRecord.isNull(Constants.CASSANDRA_AUDIT_COLUMN_DATE)) {
+        if ((latestRecord != null) && (!latestRecord.isNull(Constants.CASSANDRA_AUDIT_COLUMN_DATE))) {
             timestamp = latestRecord.getTime(Constants.CASSANDRA_AUDIT_COLUMN_DATE);
         }
         return timestamp;
+    }
+
+    /**
+     * Get the timestamp when the configurations were refreshed last
+     * @return Long
+     */
+    public static Map<String, String> getInfo() {
+        Map<String, String> info = new HashMap<>();
+        Long lastRefreshTimestamp = getLastRefreshTimestamp();
+
+        Row lastAuditRecord = auditStore.getLatestRecord(Constants.CASSANDRA_AUDIT_COLUMN_DATE, lastRefreshTimestamp);
+        if (lastAuditRecord != null) {
+            if (!lastAuditRecord.isNull(Constants.CASSANDRA_AUDIT_COLUMN_PATH)) {
+                info.put("configPath", lastAuditRecord.getObject(Constants.CASSANDRA_AUDIT_COLUMN_PATH).toString());
+            }
+
+            if (!lastAuditRecord.isNull(Constants.CASSANDRA_AUDIT_COLUMN_DATE)) {
+                info.put("timestamp", (lastAuditRecord.getObject(Constants.CASSANDRA_AUDIT_COLUMN_DATE).toString()));
+            }
+
+            if (!lastAuditRecord.isNull(Constants.CASSANDRA_AUDIT_COLUMN_VERSION)) {
+                info.put("version", (lastAuditRecord.getObject(Constants.CASSANDRA_AUDIT_COLUMN_VERSION).toString()));
+            }
+
+            info.put("size", getConfigCount().toString());
+        }
+        return info;
     }
 
     /**
@@ -126,39 +150,43 @@ public class ConfigStore {
     }
 
     public static Object read(String configKeyWithScope) {
-        //Split the config key into scope and key
-        String[] configParts = configKeyWithScope.split("\\.");
-        Integer configScopeLength = configParts.length - 1;
+        try {
+            //Split the config key into scope and key
+            String[] configParts = configKeyWithScope.split("\\.");
+            Integer configScopeLength = configParts.length - 1;
 
-        if ((!Objects.equals(configParts[0], (Constants.CONFIG_ROOT_KEY).substring(1))) || (configScopeLength > 3)) {
-            //TODO return error
+            if ((!Objects.equals(configParts[0], (Constants.CONFIG_ROOT_KEY).substring(1))) || (configScopeLength > 3)) {
+                throw new ConfigException.BadPath(configKeyWithScope, "Config key Validation failed");
+            }
+
+            Config configurations = (Config) getConfig(Constants.CONFIG_STORAGE_KEY);
+            String configKey = (configParts[configParts.length - 1]).replace("/", ".");
+            Object responseConfig = null;
+
+            switch (configScopeLength) {
+                case 0:
+                    responseConfig = configurations.getAnyRef(Constants.CONFIG_ROOT_KEY);
+                    break;
+                case 1:
+                    responseConfig = configurations.getAnyRef(Constants.CONFIG_ROOT_KEY + "." + configKey);
+                    break;
+                case 2:
+                    String tenantConfig = configurations.getAnyRef(Constants.CONFIG_ROOT_KEY + "." + Constants.CONFIG_TENANT_IDENTIFIER + "." + configParts[1]).toString();
+                    Config tenantInstanceConfig = configurations.getConfig(Constants.CONFIG_ROOT_KEY);
+                    Config tenantFallbackConfig = ConfigFactory.parseString(tenantConfig).withFallback(tenantInstanceConfig);
+                    responseConfig = tenantFallbackConfig.getAnyRef(configKey);
+                    break;
+                case 3:
+                    String orgConfig = configurations.getAnyRef(Constants.CONFIG_ROOT_KEY + "." + Constants.CONFIG_TENANT_IDENTIFIER + "." + configParts[1] + "." + Constants.CONFIG_ORGANISATION_IDENTIFIER + "." + configParts[2]).toString();
+                    Config orgInstanceConfig = configurations.getConfig(Constants.CONFIG_ROOT_KEY);
+                    Config orgFallbackConfig = ConfigFactory.parseString(orgConfig).withFallback(orgInstanceConfig);
+                    responseConfig = orgFallbackConfig.getAnyRef(configKey);
+                    break;
+            }
+
+            return responseConfig;
+        } catch (Exception e) {
+            throw new ConfigException.BadPath(configKeyWithScope, "Error fetching config");
         }
-
-        Config configurations = (Config) getConfig(Constants.CONFIG_STORAGE_KEY);
-        String configKey = (configParts[configParts.length - 1]).replace("/", ".");
-        Object responseConfig = null;
-
-        switch (configScopeLength) {
-            case 0:
-                responseConfig = configurations.getAnyRef(Constants.CONFIG_ROOT_KEY);
-                break;
-            case 1:
-                responseConfig = configurations.getAnyRef(Constants.CONFIG_ROOT_KEY + "." + configKey);
-                break;
-            case 2:
-                String tenantConfig = configurations.getAnyRef(Constants.CONFIG_ROOT_KEY + "." + Constants.CONFIG_TENANT_IDENTIFIER + "." + configParts[1]).toString();
-                Config tenantInstanceConfig = configurations.getConfig(Constants.CONFIG_ROOT_KEY);
-                Config tenantFallbackConfig = ConfigFactory.parseString(tenantConfig).withFallback(tenantInstanceConfig);
-                responseConfig = tenantFallbackConfig.getAnyRef(configKey);
-                break;
-            case 3:
-                String orgConfig = configurations.getAnyRef(Constants.CONFIG_ROOT_KEY + "." + Constants.CONFIG_TENANT_IDENTIFIER + "." + configParts[1] + "." + Constants.CONFIG_ORGANISATION_IDENTIFIER + "." + configParts[2]).toString();
-                Config orgInstanceConfig = configurations.getConfig(Constants.CONFIG_ROOT_KEY);
-                Config orgFallbackConfig = ConfigFactory.parseString(orgConfig).withFallback(orgInstanceConfig);
-                responseConfig = orgFallbackConfig.getAnyRef(configKey);
-                break;
-        }
-
-        return responseConfig;
     }
 }
