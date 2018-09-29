@@ -75,10 +75,13 @@ public class ConfigController extends BaseController {
             while(configKeys.hasNext()) {
                 String configKey = (String) configKeys.next();
 
-//                if (ConfigStore.isConfigKeyExists(configKey)) {
-                Object data = ConfigStore.read(configKey);
-                result.put(configKey, data);
-//                }
+                try {
+                    Object data = ConfigStore.read(configKey);
+                    result.put(configKey, data);
+                } catch (Exception e) {
+                    TelemetryManager.error("ConfigService | Exception | could not retrieve the value of key: " + configKey, e);
+                }
+
             }
 
             Response response = new Response();
@@ -106,13 +109,7 @@ public class ConfigController extends BaseController {
         String apiId = "sunbird.config.status";
 
         try {
-            Map<String, Object> result = new HashMap<>();
-
-            Integer configCount = ConfigStore.getConfigCount();
-            Long lastRefresh = ConfigStore.getLastRefreshTimestamp();
-
-            result.put("size", configCount);
-            result.put("lastUpdated", lastRefresh);
+            Map<String, String> info = ConfigStore.getInfo();
 
             Response response = new Response();
             ResponseParams params = new ResponseParams();
@@ -120,7 +117,10 @@ public class ConfigController extends BaseController {
             params.setStatus(StatusType.successful.name());
             params.setErrmsg("Operation successful");
             response.setParams(params);
-            response.put("keys", result);
+
+            for (Map.Entry<String,String> entry: info.entrySet()) {
+                response.put(entry.getKey(), entry.getValue());
+            }
 
             TelemetryManager.log("ConfigService | successResponse: " + response.getResponseCode());
 
