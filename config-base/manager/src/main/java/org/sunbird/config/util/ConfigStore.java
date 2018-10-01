@@ -58,8 +58,12 @@ public class ConfigStore {
      * @return Integer
      */
     public static Integer getConfigCount() {
-        Config configurations = (Config) getConfig(Constants.CONFIG_STORAGE_KEY);
-        return configurations.getConfig(Constants.CONFIG_ROOT_KEY).entrySet().size();
+        try {
+            Config configurations = (Config) getConfig(Constants.CONFIG_STORAGE_KEY);
+            return configurations.getConfig(Constants.CONFIG_ROOT_KEY).entrySet().size();
+        } catch (Exception e) {
+            throw new ServerException("ERR_CONFIG_GETCOUNT", "Error while fetching config data count.");
+        }
     }
 
     /**
@@ -67,13 +71,35 @@ public class ConfigStore {
      * @return Long
      */
     public static Long getLastRefreshTimestamp() {
-        Long timestamp = 0L;
-        Row latestRecord = auditStore.getLatestRecordTimestamp(Constants.CASSANDRA_AUDIT_COLUMN_DATE, Constants.CASSANDRA_AUDIT_COLUMN_CS_TYPE, cloudStoreType);
+        try {
+            Long timestamp = 0L;
+            Row latestRecord = auditStore.getLatestRecordTimestamp(Constants.CASSANDRA_AUDIT_COLUMN_DATE, Constants.CASSANDRA_AUDIT_COLUMN_CS_TYPE, cloudStoreType);
 
-        if ((latestRecord != null) && (!latestRecord.isNull(Constants.CASSANDRA_AUDIT_COLUMN_DATE))) {
-            timestamp = latestRecord.getTime(Constants.CASSANDRA_AUDIT_COLUMN_DATE);
+            if ((latestRecord != null) && (!latestRecord.isNull(Constants.CASSANDRA_AUDIT_COLUMN_DATE))) {
+                timestamp = latestRecord.getTime(Constants.CASSANDRA_AUDIT_COLUMN_DATE);
+            }
+            return timestamp;
+        } catch (Exception e) {
+            throw new ServerException("ERR_CONFIG_GETLASTREFRESH", "Error while fetching Last refresh timestamp.");
         }
-        return timestamp;
+    }
+
+    /**
+     * Get the timestamp when the configurations were refreshed last
+     * @return Long
+     */
+    public static Boolean checkDatabaseHealth() {
+        try {
+            Boolean status = false;
+            Row record = auditStore.getRandomOneRecord();
+
+            if (record != null) {
+                status = true;
+            }
+            return status;
+        } catch (Exception e) {
+            throw new ServerException("ERR_CONFIG_DBHEALTH", "Error while checking DB health.");
+        }
     }
 
     /**
@@ -81,26 +107,30 @@ public class ConfigStore {
      * @return Long
      */
     public static Map<String, String> getInfo() {
-        Map<String, String> info = new HashMap<>();
-        Long lastRefreshTimestamp = getLastRefreshTimestamp();
+        try {
+            Map<String, String> info = new HashMap<>();
+            Long lastRefreshTimestamp = getLastRefreshTimestamp();
 
-        Row lastAuditRecord = auditStore.getLatestRecord(Constants.CASSANDRA_AUDIT_COLUMN_DATE, lastRefreshTimestamp);
-        if (lastAuditRecord != null) {
-            if (!lastAuditRecord.isNull(Constants.CASSANDRA_AUDIT_COLUMN_PATH)) {
-                info.put("configPath", lastAuditRecord.getObject(Constants.CASSANDRA_AUDIT_COLUMN_PATH).toString());
+            Row lastAuditRecord = auditStore.getLatestRecord(Constants.CASSANDRA_AUDIT_COLUMN_DATE, lastRefreshTimestamp);
+            if (lastAuditRecord != null) {
+                if (!lastAuditRecord.isNull(Constants.CASSANDRA_AUDIT_COLUMN_PATH)) {
+                    info.put("configPath", lastAuditRecord.getObject(Constants.CASSANDRA_AUDIT_COLUMN_PATH).toString());
+                }
+
+                if (!lastAuditRecord.isNull(Constants.CASSANDRA_AUDIT_COLUMN_DATE)) {
+                    info.put("timestamp", (lastAuditRecord.getObject(Constants.CASSANDRA_AUDIT_COLUMN_DATE).toString()));
+                }
+
+                if (!lastAuditRecord.isNull(Constants.CASSANDRA_AUDIT_COLUMN_VERSION)) {
+                    info.put("version", (lastAuditRecord.getObject(Constants.CASSANDRA_AUDIT_COLUMN_VERSION).toString()));
+                }
+
+                info.put("size", getConfigCount().toString());
             }
-
-            if (!lastAuditRecord.isNull(Constants.CASSANDRA_AUDIT_COLUMN_DATE)) {
-                info.put("timestamp", (lastAuditRecord.getObject(Constants.CASSANDRA_AUDIT_COLUMN_DATE).toString()));
-            }
-
-            if (!lastAuditRecord.isNull(Constants.CASSANDRA_AUDIT_COLUMN_VERSION)) {
-                info.put("version", (lastAuditRecord.getObject(Constants.CASSANDRA_AUDIT_COLUMN_VERSION).toString()));
-            }
-
-            info.put("size", getConfigCount().toString());
+            return info;
+        } catch (Exception e) {
+            throw new ServerException("ERR_CONFIG_GETINFO", "Error while fetching config info.");
         }
-        return info;
     }
 
     /**
@@ -134,13 +164,6 @@ public class ConfigStore {
 
                 //Clear the previous data
                 clearConfig();
-
-                // Iterate over flat config and Store
-//                for (Map.Entry<String, ConfigValue> entry : parsedConfigData.entrySet()) {
-//                    String key = entry.getKey();
-//                    Object val = entry.getValue().unwrapped();
-//                    setConfig(key, val);
-//                }
                 setConfig(Constants.CONFIG_STORAGE_KEY, parsedConfigData);
             }
         } catch (Exception e) {

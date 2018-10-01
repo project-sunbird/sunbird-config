@@ -12,9 +12,7 @@ import org.sunbird.common.dto.ResponseParams.StatusType;
 import org.sunbird.config.util.ConfigStore;
 import org.sunbird.telemetry.logger.TelemetryManager;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
 @Controller
 @RequestMapping("/v1/")
@@ -121,6 +119,67 @@ public class ConfigController extends BaseController {
             for (Map.Entry<String,String> entry: info.entrySet()) {
                 response.put(entry.getKey(), entry.getValue());
             }
+
+            TelemetryManager.log("ConfigService | successResponse: " + response.getResponseCode());
+
+            return getResponseEntity(response, apiId, null);
+
+        } catch (Exception e) {
+            TelemetryManager.error("ConfigService | Exception", e);
+            return getExceptionResponseEntity(e, apiId, null);
+        }
+    }
+
+    @RequestMapping(value = "/health", method = RequestMethod.GET)
+    @ResponseBody
+    public ResponseEntity<Response> getHealth() {
+        // TODO refactor the health status object creation
+        String apiId = "sunbird.config.health";
+
+        try {
+            Response response = new Response();
+            ResponseParams params = new ResponseParams();
+            params.setErr("0");
+            params.setStatus(StatusType.successful.name());
+            params.setErrmsg("Operation successful");
+            response.setParams(params);
+
+            Boolean cassandraStatus = false;
+            try {
+                cassandraStatus = ConfigStore.checkDatabaseHealth();
+            } catch (Exception e) {
+                TelemetryManager.error("ConfigService | Exception", e);
+            }
+
+            Map<String, Object> cassandraHealth = new HashMap<>();
+            cassandraHealth.put("name", "Cassandra service");
+            cassandraHealth.put("healthy", cassandraStatus);
+            cassandraHealth.put("err", "");
+            if (!cassandraStatus) {
+                cassandraHealth.put("errmsg", "Cassandra service is Unhealthy");
+            } else {
+                cassandraHealth.put("errmsg", "");
+            }
+
+            Map<String, Object> configHealth = new HashMap<>();
+            configHealth.put("name", "Config service");
+            configHealth.put("healthy", true);
+            configHealth.put("err", "");
+            configHealth.put("errmsg", "");
+
+            Boolean overallHealth = cassandraStatus;
+
+            List<Map<String, Object>> checks = new ArrayList<>();
+            checks.add(configHealth);
+            checks.add(cassandraHealth);
+
+            Map<String, Object> aggregatedResponse = new HashMap<>();
+            aggregatedResponse.put("checks", checks);
+            aggregatedResponse.put("healthy", overallHealth);
+            aggregatedResponse.put("name", "Complete health check API");
+
+
+            response.put("response", aggregatedResponse);
 
             TelemetryManager.log("ConfigService | successResponse: " + response.getResponseCode());
 
