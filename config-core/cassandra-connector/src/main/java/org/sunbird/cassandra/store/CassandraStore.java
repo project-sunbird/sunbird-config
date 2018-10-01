@@ -121,7 +121,6 @@ public abstract class CassandraStore {
             throw new ServerException(CassandraConnectorStoreParam.ERR_SERVER_ERROR.name(),
                     "Error while fetching record for ID : " + value, e);
         }
-
     }
 
     protected List<Row> getRecordsByProperty(String propertyName, List<Object> propertyValueList) {
@@ -193,6 +192,17 @@ public abstract class CassandraStore {
         } catch (Exception e) {
             throw new ServerException(CassandraConnectorStoreParam.ERR_SERVER_ERROR.name(),
                     "Error while fetching all records", e);
+        }
+    }
+
+    protected Row getRandomOneRecord() {
+        try {
+            Select selectQuery = QueryBuilder.select().all().from(keyspace, table).limit(1);
+            ResultSet results = CassandraConnector.getSession().execute(selectQuery);
+            return results.one();
+        } catch (Exception e) {
+            throw new ServerException(CassandraConnectorStoreParam.ERR_SERVER_ERROR.name(),
+                    "Error while fetching a random record", e);
         }
     }
 

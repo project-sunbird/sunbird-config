@@ -40,4 +40,10 @@ public class CassandraStoreImpl extends CassandraStore {
         Row record = super.getLatestRecord(timestampColumn, lastRefreshTimestamp);
         return record;
     }
+
+    @Override
+    public Row getRandomOneRecord() {
+        Row record = super.getRandomOneRecord();
+        return record;
+    }
 }
