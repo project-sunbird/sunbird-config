@@ -1,4 +1,4 @@
-
+package org.sunbird;
 
 import static com.jayway.restassured.RestAssured.baseURI;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -14,20 +14,18 @@ import com.jayway.restassured.builder.ResponseSpecBuilder;
 import com.jayway.restassured.specification.RequestSpecification;
 import com.jayway.restassured.specification.ResponseSpecification;
 
-public class BaseTest 
-{
+public class BaseTest {
 	ResponseSpecBuilder builderres = new ResponseSpecBuilder();
 	RequestSpecBuilder builderreq = new RequestSpecBuilder();
-	String subURI="v2/";
+	String subURI = "v1";
+
 	/**
 	 * sets baseURI
 	 */
-	public void setURI()
-	{
-		baseURI = "http://localhost:8080/";
-		//baseURI ="http://localhost:9090/taxonomy-service";
-		//basePath = "v2/";
+	public void setURI() {
+		baseURI = "http://localhost:8080/config-service/v1";
 	}
+
 	/**
 	 * adds the given content_type and user_id to the request header
 	 * 
@@ -35,21 +33,21 @@ public class BaseTest
 	 * @param user_id
 	 * @return returns a RequestSpecification object
 	 */
-	public RequestSpecification getRequestSpec(String content_type,String user_id)
-	{
-		
+	public RequestSpecification getRequestSpec(String content_type, String user_id) {
+
 		builderreq.addHeader("Content-Type", content_type);
 		builderreq.addHeader("user-id", user_id);
 		RequestSpecification requestSpec = builderreq.build();
 		return requestSpec;
 	}
+
 	/**
-	 * checks whether response statuscode is 200,param size is 5, param.status is successful and param.errmsg is null
+	 * checks whether response statuscode is 200,param size is 5, param.status is
+	 * successful and param.errmsg is null
 	 * 
 	 * @return ResponseSpecification object
 	 */
-	public ResponseSpecification get200ResponseSpec()
-	{
+	public ResponseSpecification get200ResponseSpec() {
 		builderres.expectStatusCode(200);
 		builderres.expectBody("params.size()", is(5));
 		builderres.expectBody("params.status", equalTo("successful"));
@@ -57,13 +55,14 @@ public class BaseTest
 		ResponseSpecification responseSpec = builderres.build();
 		return responseSpec;
 	}
+
 	/**
-	 * checks whether response statuscode is 500,param size is 5, param.status is failed and responsecode is SERVER_ERROR
+	 * checks whether response statuscode is 500,param size is 5, param.status is
+	 * failed and responsecode is SERVER_ERROR
 	 * 
 	 * @return ResponseSpecification object
 	 */
-	public ResponseSpecification get500ResponseSpec()
-	{
+	public ResponseSpecification get500ResponseSpec() {
 		builderres.expectStatusCode(500);
 		builderres.expectBody("params.size()", is(5));
 		builderres.expectBody("params.status", equalTo("failed"));
@@ -71,13 +70,14 @@ public class BaseTest
 		ResponseSpecification responseSpec = builderres.build();
 		return responseSpec;
 	}
+
 	/**
-	 * checks whether response statuscode is 404,param size is 5, param.status is failed and responsecode is RESOURCE_NOT_FOUND
+	 * checks whether response statuscode is 404,param size is 5, param.status is
+	 * failed and responsecode is RESOURCE_NOT_FOUND
 	 * 
 	 * @return ResponseSpecification object
 	 */
-	public ResponseSpecification get404ResponseSpec()
-	{
+	public ResponseSpecification get404ResponseSpec() {
 		builderres.expectStatusCode(404);
 		builderres.expectBody("params.size()", is(5));
 		builderres.expectBody("params.status", equalTo("failed"));
@@ -86,4 +86,3 @@ public class BaseTest
 		return responseSpec;
 	}
 }
-
