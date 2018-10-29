@@ -15,4 +15,5 @@ public class Constants {
     public static String CONFIG_ROOT_KEY = "_instance";
     public static String CONFIG_TENANT_IDENTIFIER = "_tenant";
     public static String CONFIG_ORGANISATION_IDENTIFIER = "_organisation";
+    public static String CONFIG_ALL_KEYS_IN_SCOPE = "*";
 }
