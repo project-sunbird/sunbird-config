@@ -65,22 +65,33 @@ public class ConfigController extends BaseController {
 
         try {
             JSONObject request = new JSONObject(map);
-            Iterator configKeys = request.getJSONObject("request").getJSONArray("keys").iterator();
-
-            TelemetryManager.log("ConfigService | GET | configKeys: " + configKeys.toString());
+            JSONObject configRequestObject = request.getJSONObject("request").getJSONObject("keys");
+            Iterator<String> configScopes = configRequestObject.keys();
 
             Map<String, Object> result = new HashMap<>();
-            while(configKeys.hasNext()) {
-                String configKey = (String) configKeys.next();
+            while(configScopes.hasNext()) {
+                String configScope = (String) configScopes.next();
+                Iterator configKeys = configRequestObject.getJSONArray(configScope).iterator();
 
-                try {
-                    Object data = ConfigStore.read(configKey);
-                    result.put(configKey, data);
-                } catch (Exception e) {
-                    TelemetryManager.error("ConfigService | Exception | could not retrieve the value of key: " + configKey, e);
+                Map<String, Object> configData = new HashMap<>();
+                while(configKeys.hasNext()) {
+                    String configKey = (String) configKeys.next();
+                    try {
+                        Object data = ConfigStore.read(configKey, configScope);
+                        configData.put(configKey, data);
+                    } catch (Exception e) {
+                        TelemetryManager.error("ConfigService | Exception | could not retrieve the value of key: " + configKey, e);
+                    }
                 }
 
+                if (configData.size() > 0) {
+                    result.put(configScope, configData);
+                }
             }
+
+            TelemetryManager.log("ConfigService | GET | configScopeAndKeys: " + configRequestObject.toString());
+
+
 
             Response response = new Response();
             ResponseParams params = new ResponseParams();
@@ -99,7 +110,6 @@ public class ConfigController extends BaseController {
             return getExceptionResponseEntity(e, apiId, null);
         }
     }
-
 
     @RequestMapping(value = "/status", method = RequestMethod.GET)
     @ResponseBody

@@ -7,6 +7,7 @@ import com.typesafe.config.*;
 import org.sunbird.cassandra.store.CassandraStoreImpl;
 import org.sunbird.common.Platform;
 import org.sunbird.common.exception.ServerException;
+import org.sunbird.telemetry.logger.TelemetryManager;
 
 import java.time.Instant;
 import java.util.*;
@@ -172,35 +173,46 @@ public class ConfigStore {
         return true;
     }
 
-    public static Object read(String configKeyWithScope) {
-        try {
-            //Split the config key into scope and key
-            String[] configParts = configKeyWithScope.split("\\.");
-            Integer configScopeLength = configParts.length - 1;
+    public static Object read(String configKey, String configScope) {
+        if (configKey.length() == 0) {
+            TelemetryManager.error("ConfigService | Exception | Blank config key not allowed");
+            throw new ConfigException.BadValue(configKey, "Blank config key not allowed");
+        }
 
-            if ((!Objects.equals(configParts[0], (Constants.CONFIG_ROOT_KEY).substring(1))) || (configScopeLength > 3)) {
-                throw new ConfigException.BadPath(configKeyWithScope, "Config key Validation failed");
+        if (configScope.length() == 0) {
+            TelemetryManager.error("ConfigService | Exception | Blank config scope not allowed");
+            throw new ConfigException.BadValue(configScope, "Blank config scope not allowed");
+        }
+
+        try {
+            String[] configScopeParts = configScope.split("\\.");
+            Integer configScopeLength = configScopeParts.length;
+
+            if ((!Objects.equals(configScopeParts[0], (Constants.CONFIG_ROOT_KEY).substring(1))) || (configScopeLength > 3)) {
+                throw new ConfigException.BadPath(configScope, "Config scope Validation failed");
             }
 
             Config configurations = (Config) getConfig(Constants.CONFIG_STORAGE_KEY);
-            String configKey = (configParts[configParts.length - 1]).replace("/", ".");
+//            String configKey = (configParts[configParts.length - 1]).replace("/", ".");
             Object responseConfig = null;
 
             switch (configScopeLength) {
-                case 0:
-                    responseConfig = configurations.getAnyRef(Constants.CONFIG_ROOT_KEY);
-                    break;
                 case 1:
-                    responseConfig = configurations.getAnyRef(Constants.CONFIG_ROOT_KEY + "." + configKey);
+                    String path = Constants.CONFIG_ROOT_KEY + "." + configKey;
+                    if (Objects.equals(configKey, (Constants.CONFIG_ALL_KEYS_IN_SCOPE))) {
+                        path = Constants.CONFIG_ROOT_KEY;
+                    }
+                    responseConfig = configurations.getAnyRef(path);
                     break;
                 case 2:
-                    String tenantConfig = configurations.getAnyRef(Constants.CONFIG_ROOT_KEY + "." + Constants.CONFIG_TENANT_IDENTIFIER + "." + configParts[1]).toString();
+                    String tenantConfig = configurations.getAnyRef(Constants.CONFIG_ROOT_KEY + "." + Constants.CONFIG_TENANT_IDENTIFIER + "." + configScopeParts[1]).toString();
                     Config tenantInstanceConfig = configurations.getConfig(Constants.CONFIG_ROOT_KEY);
                     Config tenantFallbackConfig = ConfigFactory.parseString(tenantConfig).withFallback(tenantInstanceConfig);
                     responseConfig = tenantFallbackConfig.getAnyRef(configKey);
                     break;
                 case 3:
-                    String orgConfig = configurations.getAnyRef(Constants.CONFIG_ROOT_KEY + "." + Constants.CONFIG_TENANT_IDENTIFIER + "." + configParts[1] + "." + Constants.CONFIG_ORGANISATION_IDENTIFIER + "." + configParts[2]).toString();
+                    String orgConfig = configurations.getAnyRef(Constants.CONFIG_ROOT_KEY + "." + Constants.CONFIG_TENANT_IDENTIFIER +
+                            "." + configScopeParts[1] + "." + Constants.CONFIG_ORGANISATION_IDENTIFIER + "." + configScopeParts[2]).toString();
                     Config orgInstanceConfig = configurations.getConfig(Constants.CONFIG_ROOT_KEY);
                     Config orgFallbackConfig = ConfigFactory.parseString(orgConfig).withFallback(orgInstanceConfig);
                     responseConfig = orgFallbackConfig.getAnyRef(configKey);
@@ -209,7 +221,7 @@ public class ConfigStore {
 
             return responseConfig;
         } catch (Exception e) {
-            throw new ConfigException.BadPath(configKeyWithScope, "Error fetching config");
+            throw new ConfigException.BadPath(configScope + "." + configKey, "Error fetching config");
         }
     }
 }
