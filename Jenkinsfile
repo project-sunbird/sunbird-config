@@ -31,13 +31,15 @@ node('build-slave') {
             cleanWs()
             if(params.tag == ""){
                 checkout scm
+                sh('git submodule update --init')
+                sh('git submodule update --init --recursive --remote')
                 commit_hash = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
                 branch_name = sh(script: 'git name-rev --name-only HEAD | rev | cut -d "/" -f1| rev', returnStdout: true).trim()
                 build_tag = branch_name + "_" + commit_hash
             }
             else {
                 def scmVars = checkout scm
-                checkout scm: [$class: 'GitSCM', branches: [[name: "refs/tags/$params.tag"]],  userRemoteConfigs: [[url: scmVars.GIT_URL]]]
+                checkout scm: [$class: 'GitSCM', branches: [[name: "refs/tags/$params.tag"]], extensions: [[$class: 'SubmoduleOption', disableSubmodules: false, parentCredentials: false, recursiveSubmodules: true, reference: '', trackingSubmodules: false]],  userRemoteConfigs: [[url: scmVars.GIT_URL]]]
                 build_tag = params.tag
             }
             echo "build_tag: "+build_tag
