@@ -27,7 +27,7 @@ node('build-slave') {
                     println(ANSI_BOLD + ANSI_GREEN + "Found environment variable named hub_org with value as: " + hub_org + ANSI_NORMAL)
             }
             cleanWs()
-            if (params.tag == "") {
+            if (params.github_release_tag == "") {
                 checkout scm
                 sh('git submodule update --init')
                 sh('git submodule update --init --recursive --remote')
@@ -37,9 +37,9 @@ node('build-slave') {
                 println(ANSI_BOLD + ANSI_YELLOW + "Tag not specified, using the latest commit hash: " + commit_hash + ANSI_NORMAL)
             } else {
                 def scmVars = checkout scm
-                checkout scm: [$class: 'GitSCM', branches: [[name: "refs/tags/$params.tag"]], extensions: [[$class: 'SubmoduleOption', disableSubmodules: false, parentCredentials: false, recursiveSubmodules: true, reference: '', trackingSubmodules: false]], userRemoteConfigs: [[url: scmVars.GIT_URL]]]
-                build_tag = params.tag
-                println(ANSI_BOLD + ANSI_YELLOW + "Tag specified, building from tag: " + params.tag + ANSI_NORMAL)
+                checkout scm: [$class: 'GitSCM', branches: [[name: "refs/tags/$params.github_release_tag"]], extensions: [[$class: 'SubmoduleOption', disableSubmodules: false, parentCredentials: false, recursiveSubmodules: true, reference: '', trackingSubmodules: false]], userRemoteConfigs: [[url: scmVars.GIT_URL]]]
+                build_tag = params.github_release_tag
+                println(ANSI_BOLD + ANSI_YELLOW + "Tag specified, building from tag: " + params.github_release_tag + ANSI_NORMAL)
             }
             echo "build_tag: " + build_tag
 
